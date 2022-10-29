@@ -10,16 +10,11 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:ecco-lsp-client.activate",
-    "workspaceContains:**/.ecco"
+    "workspaceContains:**/.ecco/id"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "ecco-lsp-client.activate",
-        "title": "ECCO LSP: Activate"
-      }
     ]
   },
   "scripts": {
@@ -44,6 +39,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "vscode-languageclient": "^8.0.2"
+    "vscode-languageclient": "^8.0.2",
+    "winston": "^3.8.2"
   }
 }

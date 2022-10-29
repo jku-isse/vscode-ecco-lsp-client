@@ -1,6 +1,7 @@
 import fs = require('fs');
 import path = require('path');
 import { ExtensionContext } from 'vscode';
+import logger from './logger';
 
 import {
 	Executable,
@@ -11,27 +12,43 @@ import {
 
 let client: LanguageClient;
 
-function setupLogger(context: ExtensionContext): Promise<string> {
-	return new Promise(resolve => {
-		const logDirectory = context.logUri.fsPath;
-		fs.mkdir(logDirectory, { recursive: true }, _ => {
-			const serverLogFile = path.join(logDirectory, "ecco-lsp-server.log");
-			console.log('ecco-lsp-client: server log is set up to ', serverLogFile);
-			resolve(serverLogFile);
-		});
-	});
+async function setupServerLog(context: ExtensionContext): Promise<string> {
+	const logDirectory = context.logUri.fsPath;
+	const serverLogFile = path.join(logDirectory, "ecco-lsp-server.log");
+
+	try {
+		await fs.promises.mkdir(logDirectory, {recursive: true});
+	} catch (_) {
+		// Ignore errors
+	}
+
+	return serverLogFile;
 }
 
 export async function activate(context: ExtensionContext) {
-	console.log('ecco-lsp-client: activating');
+	logger.debug('activating');
 
-	const serverLogFile: string = await setupLogger(context);
+	const serverLogFile: string = await setupServerLog(context);
 	const eccoLspServerJar: string = path.join(context.extensionPath, 'resources', 'ecco-lsp-server.jar');
-	console.log('ecco-lsp-client: LSP server JAR file ', eccoLspServerJar);
+
+	try {
+		await fs.promises.access(eccoLspServerJar, fs.constants.R_OK);
+	} catch (ex: any) {
+		logger.emerg(`server JAR file ${eccoLspServerJar} is not accessible: ${ex.message}`);
+		return;
+	}
+
+	logger.info(`server JAR file is ${eccoLspServerJar}`);
+	logger.info(`server log is set up to ${serverLogFile}`);
 
 	const eccoLspServerExecutable: Executable = {
 		command: 'java',
-		args: ['-jar', eccoLspServerJar, serverLogFile]
+		args: ['-jar', eccoLspServerJar],
+		options: {
+			env: {
+				'ECCO_LSP_SERVER_LOG': serverLogFile
+			}
+		}
 	};
 
 	const serverOptions: ServerOptions = {

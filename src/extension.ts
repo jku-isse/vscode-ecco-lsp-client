@@ -57,7 +57,10 @@ export async function activate(context: ExtensionContext) {
 	};
 
 	const clientOptions: LanguageClientOptions = {
-		documentSelector: [{ scheme: 'file', language: 'plaintext' }]
+		documentSelector: [
+			{ scheme: 'file', language: 'plaintext' },
+			{ scheme: 'file', language: 'java' }
+		]
 	};
 
 	client = new LanguageClient(

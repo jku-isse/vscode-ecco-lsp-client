@@ -18,6 +18,10 @@
       {
         "command": "eccoExtension.checkout",
         "title": "ECCO Checkout"
+      },
+      {
+        "command": "eccoExtension.commit",
+        "title": "ECCO Commit"
       }
     ]
   },

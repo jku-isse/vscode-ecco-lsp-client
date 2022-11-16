@@ -61,14 +61,15 @@ export async function activate(context: ExtensionContext) {
 			{ scheme: 'file', language: 'plaintext' },
 			{ scheme: 'file', language: 'java' },
 			{ scheme: 'file', language: 'xml' }
-		]
+		]		
 	};
 
 	client = new LanguageClient(
 		'eccoLspClient',
 		'Client for ECCO language server',
 		serverOptions,
-		clientOptions
+		clientOptions,
+		true
 	);
 
 	await client.start();
@@ -78,6 +79,7 @@ export async function activate(context: ExtensionContext) {
 
 function configureCommands(context: ExtensionContext): void {
 	context.subscriptions.push(commands.registerCommand('eccoExtension.checkout', checkoutCommandHandler));
+	context.subscriptions.push(commands.registerCommand('eccoExtension.commit', commitCommandHandler));
 }
 
 async function checkoutCommandHandler(): Promise<void> {
@@ -100,6 +102,43 @@ async function checkoutCommandHandler(): Promise<void> {
 
 			await window.showErrorMessage(`Failed to perform ECCO checkout: ${ex}`);
 		}
+	}
+}
+
+async function commitCommandHandler(): Promise<void> {
+	const message: string | undefined = await window.showInputBox({
+		title: 'ECCO commit message',
+		placeHolder: 'Describe your commit'
+	});
+
+	if (typeof message === 'undefined') {
+		return;
+	}
+
+	const configuration: string | undefined = await window.showInputBox({
+		title: 'ECCO commit configuration',
+		placeHolder: 'Leave empty to use the content of .config'
+	});
+
+	if (typeof configuration === 'undefined') {
+		return;
+	}
+
+	logger.debug(`Requested ECCO commit \"${message}\" for configuration \"${configuration}\"`);
+
+	try {
+		const response: any = await client.sendRequest("ecco/commit", {
+			configuration,
+			message
+		});
+
+		logger.debug(`Commit response: ${response}`);
+
+		await window.showInformationMessage(`Committed \"${response.configuration}\" as ${response.id}`);
+	} catch (ex) {
+		logger.log('error', `Failed to perform ECCO commit: ${ex}`);
+
+		await window.showErrorMessage(`Failed to perform ECCO commit: ${ex}`);
 	}
 }
 

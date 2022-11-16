@@ -1,13 +1,13 @@
 import fs = require('fs');
 import path = require('path');
-import { ExtensionContext } from 'vscode';
+import { ExtensionContext, commands, window } from 'vscode';
 import logger from './logger';
 
 import {
 	Executable,
 	LanguageClient,
 	LanguageClientOptions,
-	ServerOptions
+	ServerOptions,
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
@@ -72,6 +72,35 @@ export async function activate(context: ExtensionContext) {
 	);
 
 	await client.start();
+
+	configureCommands(context);
+}
+
+function configureCommands(context: ExtensionContext): void {
+	context.subscriptions.push(commands.registerCommand('eccoExtension.checkout', checkoutCommandHandler));
+}
+
+async function checkoutCommandHandler(): Promise<void> {
+	const configuration: string | undefined = await window.showInputBox({
+		title: 'ECCO Checkout',
+		placeHolder: 'Comma-separated list of feature revisions'
+	});
+
+	if (typeof configuration === 'string') {
+		logger.debug(`Requested ECCO checkout for: ${configuration}`);
+
+		try {
+			await client.sendRequest("ecco/checkout", {
+				configuration
+			});
+
+			await window.showInformationMessage(`Checked out ECCO configuration: ${configuration}`);
+		} catch (ex) {
+			logger.log('error', `Failed to perform ECCO checkout: ${ex}`);
+
+			await window.showErrorMessage(`Failed to perform ECCO checkout: ${ex}`);
+		}
+	}
 }
 
 export function deactivate(): Thenable<void> | undefined {

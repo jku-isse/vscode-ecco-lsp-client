@@ -15,6 +15,10 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "eccoExtension.checkout",
+        "title": "ECCO Checkout"
+      }
     ]
   },
   "scripts": {

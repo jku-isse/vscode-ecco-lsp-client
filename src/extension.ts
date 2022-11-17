@@ -1,150 +1,22 @@
-import fs = require('fs');
-import path = require('path');
-import { ExtensionContext, commands, window } from 'vscode';
+import { ExtensionContext, window } from 'vscode';
 import logger from './logger';
+import EccoClient from './eccoClient';
 
-import {
-	Executable,
-	LanguageClient,
-	LanguageClientOptions,
-	ServerOptions,
-} from 'vscode-languageclient/node';
-
-let client: LanguageClient;
-
-async function setupServerLog(context: ExtensionContext): Promise<string> {
-	const logDirectory = context.logUri.fsPath;
-	const serverLogFile = path.join(logDirectory, "ecco-lsp-server.log");
-
-	try {
-		await fs.promises.mkdir(logDirectory, {recursive: true});
-	} catch (_) {
-		// Ignore errors
-	}
-
-	return serverLogFile;
-}
+let client: EccoClient;
 
 export async function activate(context: ExtensionContext) {
 	logger.debug('activating');
 
-	const serverLogFile: string = await setupServerLog(context);
-	const eccoLspServerJar: string = path.join(context.extensionPath, 'resources', 'ecco-lsp-server.jar');
-
 	try {
-		await fs.promises.access(eccoLspServerJar, fs.constants.R_OK);
-	} catch (ex: any) {
-		logger.emerg(`server JAR file ${eccoLspServerJar} is not accessible: ${ex.message}`);
-		return;
-	}
-
-	logger.info(`server JAR file is ${eccoLspServerJar}`);
-	logger.info(`server log is set up to ${serverLogFile}`);
-
-	const eccoLspServerExecutable: Executable = {
-		command: 'java',
-		args: ['-jar', eccoLspServerJar],
-		options: {
-			env: {
-				'ECCO_LSP_SERVER_LOG': serverLogFile
-			}
-		}
-	};
-
-	const serverOptions: ServerOptions = {
-		run: eccoLspServerExecutable,
-		debug: eccoLspServerExecutable
-	};
-
-	const clientOptions: LanguageClientOptions = {
-		documentSelector: [
-			{ scheme: 'file', language: 'plaintext' },
-			{ scheme: 'file', language: 'java' },
-			{ scheme: 'file', language: 'xml' }
-		]		
-	};
-
-	client = new LanguageClient(
-		'eccoLspClient',
-		'Client for ECCO language server',
-		serverOptions,
-		clientOptions,
-		true
-	);
-
-	await client.start();
-
-	configureCommands(context);
-}
-
-function configureCommands(context: ExtensionContext): void {
-	context.subscriptions.push(commands.registerCommand('eccoExtension.checkout', checkoutCommandHandler));
-	context.subscriptions.push(commands.registerCommand('eccoExtension.commit', commitCommandHandler));
-}
-
-async function checkoutCommandHandler(): Promise<void> {
-	const configuration: string | undefined = await window.showInputBox({
-		title: 'ECCO Checkout',
-		placeHolder: 'Comma-separated list of feature revisions'
-	});
-
-	if (typeof configuration === 'string') {
-		logger.debug(`Requested ECCO checkout for: ${configuration}`);
-
-		try {
-			await client.sendRequest("ecco/checkout", {
-				configuration
-			});
-
-			await window.showInformationMessage(`Checked out ECCO configuration: ${configuration}`);
-		} catch (ex) {
-			logger.log('error', `Failed to perform ECCO checkout: ${ex}`);
-
-			await window.showErrorMessage(`Failed to perform ECCO checkout: ${ex}`);
-		}
-	}
-}
-
-async function commitCommandHandler(): Promise<void> {
-	const message: string | undefined = await window.showInputBox({
-		title: 'ECCO commit message',
-		placeHolder: 'Describe your commit'
-	});
-
-	if (typeof message === 'undefined') {
-		return;
-	}
-
-	const configuration: string | undefined = await window.showInputBox({
-		title: 'ECCO commit configuration',
-		placeHolder: 'Leave empty to use the content of .config'
-	});
-
-	if (typeof configuration === 'undefined') {
-		return;
-	}
-
-	logger.debug(`Requested ECCO commit \"${message}\" for configuration \"${configuration}\"`);
-
-	try {
-		const response: any = await client.sendRequest("ecco/commit", {
-			configuration,
-			message
-		});
-
-		logger.debug(`Commit response: ${response}`);
-
-		await window.showInformationMessage(`Committed \"${response.configuration}\" as ${response.id}`);
+		client = new EccoClient(context);
+		await client.start();
 	} catch (ex) {
-		logger.log('error', `Failed to perform ECCO commit: ${ex}`);
-
-		await window.showErrorMessage(`Failed to perform ECCO commit: ${ex}`);
+        window.showErrorMessage(`Failed to initialize ECCO client extension: ${ex}`);
 	}
 }
 
-export function deactivate(): Thenable<void> | undefined {
-	if (!client) {
-		return undefined;
+export async function deactivate(): Promise<void> {
+	if (client) {
+		await client.stop();
 	}
-	return client.stop();
 }

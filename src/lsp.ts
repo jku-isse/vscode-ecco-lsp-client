@@ -45,7 +45,7 @@ export async function newEccoLanguageClient(context: ExtensionContext): Promise<
             { scheme: 'file', language: 'plaintext' },
             { scheme: 'file', language: 'java' },
             { scheme: 'file', language: 'xml' },
-            { scheme: 'file', language: 'ly' }
+            { scheme: 'file', language: 'lilypond' }
         ]		
     };
 

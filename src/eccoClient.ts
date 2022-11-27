@@ -1,10 +1,11 @@
-import { commands, ExtensionContext, StatusBarAlignment, StatusBarItem, window, workspace } from "vscode";
+import { commands, ExtensionContext, languages, StatusBarAlignment, StatusBarItem, window, workspace } from "vscode";
 import logger from "./logger";
 import { LanguageClient } from "vscode-languageclient/node";
 import { checkout, commit, repositoryInfo } from "./operations";
 import { newEccoLanguageClient } from "./lsp";
 import { EccoInfoDocumentContentProvider } from "./infoDocument";
 import assert = require("assert");
+import EccoHighlightProvider from "./highlightProvider";
 
 class EccoClient {
 
@@ -21,6 +22,7 @@ class EccoClient {
         await this.registerCommands();
         await this.setupStatusBar();
         await this.setupInfoDocument();
+        await this.setupHighlight();
     }
 
     public async stop(): Promise<void> {
@@ -61,6 +63,12 @@ class EccoClient {
     private async setupInfoDocument(): Promise<void> {
         assert(typeof this.languageClient !== 'undefined');
         this.context.subscriptions.push(workspace.registerTextDocumentContentProvider("ecco-info", new EccoInfoDocumentContentProvider(this.languageClient)));
+    }
+
+    private async setupHighlight(): Promise<void> {
+        assert(typeof this.languageClient !== 'undefined');
+        const selector =  { language: 'lilypond', scheme: 'file' };
+        languages.registerDocumentSemanticTokensProvider(selector, new EccoHighlightProvider(this.languageClient), EccoHighlightProvider.getLegend());
     }
 }
 

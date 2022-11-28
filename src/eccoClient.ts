@@ -67,9 +67,9 @@ class EccoClient {
     }
 
     private async setupHighlight(): Promise<void> {
-        assert(typeof this.languageClient !== 'undefined');
-        const selector =  { language: 'lilypond', scheme: 'file' };
-        languages.registerDocumentSemanticTokensProvider(selector, new EccoHighlightProvider(this.languageClient), EccoHighlightProvider.getLegend());
+        // assert(typeof this.languageClient !== 'undefined');
+        // const selector =  { language: 'lilypond', scheme: 'file' };
+        // languages.registerDocumentSemanticTokensProvider(selector, new EccoHighlightProvider(this.languageClient), EccoHighlightProvider.getLegend());
     }
 }
 

@@ -1,7 +1,7 @@
 import { commands, ExtensionContext, languages, StatusBarAlignment, StatusBarItem, window, workspace } from "vscode";
 import logger from "./logger";
 import { LanguageClient } from "vscode-languageclient/node";
-import { checkout, commit, repositoryInfo } from "./operations";
+import { checkout, commit, openAssociationsView, repositoryInfo } from "./operations";
 import { newEccoLanguageClient } from "./lsp";
 import { EccoInfoDocumentContentProvider } from "./infoDocument";
 import assert = require("assert");
@@ -40,6 +40,7 @@ class EccoClient {
         this.context.subscriptions.push(commands.registerCommand('eccoExtension.checkout', this.newOperationHandler(checkout)));
         this.context.subscriptions.push(commands.registerCommand('eccoExtension.commit', this.newOperationHandler(commit)));
         this.context.subscriptions.push(commands.registerCommand('eccoExtension.info', repositoryInfo));
+        this.context.subscriptions.push(commands.registerCommand('eccoExtension.openAssociationsView', this.newOperationHandler(languageClient => openAssociationsView(this.context, languageClient))));
     }
 
     private newOperationHandler(operation: (languageClient: LanguageClient) => Promise<void>): () => Promise<void> {

@@ -28,6 +28,10 @@
       {
         "command": "eccoExtension.commit",
         "title": "ECCO Commit"
+      },
+      {
+        "command": "eccoExtension.openAssociationsView",
+        "title": "Render ECCO Document Associations"
       }
     ]
   },

@@ -1,6 +1,7 @@
-import { commands, languages, ProgressLocation, Uri, window, workspace } from "vscode";
+import { commands, ExtensionContext, languages, ProgressLocation, Uri, window, workspace } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
 import logger from "./logger";
+import EccoDocumentAssociationsView from './documentAssociationsView';
 
 export async function checkout(languageClient: LanguageClient): Promise<void> {
     const configuration: string | undefined = await window.showInputBox({
@@ -76,4 +77,11 @@ export async function repositoryInfo(): Promise<void> {
     const uri = Uri.parse('ecco-info:ECCO repository info');
     const doc = await workspace.openTextDocument(uri);
     await window.showTextDocument(doc, { preview: false });
+}
+
+export async function openAssociationsView(context: ExtensionContext, languageClient: LanguageClient): Promise<void> {
+    if (window.activeTextEditor) {
+        const view = new EccoDocumentAssociationsView(context, languageClient);
+        await view.update(window.activeTextEditor?.document);
+    }
 }

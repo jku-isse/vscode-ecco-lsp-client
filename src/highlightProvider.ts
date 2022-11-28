@@ -1,6 +1,7 @@
 import { DocumentSemanticTokensProvider, Position, ProviderResult, Range, SemanticTokens, SemanticTokensBuilder, SemanticTokensLegend, TextDocument } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/node';
+import { EccoDocumentAssociationsRequest, EccoDocumentAssociationsResponse } from './dto/Associations';
 
 const tokenTypes = ['namespace', 'class', 'enum', 'interface', 'struct', 'typeParameter', 'type', 'parameter', 'variable', 'property',
     'enumMember', 'decorator', 'event', 'function', 'method', 'macro', 'label', 'comment', 'string', 'keyword', 'number',
@@ -8,15 +9,6 @@ const tokenTypes = ['namespace', 'class', 'enum', 'interface', 'struct', 'typePa
 const tokenModifiers = ['declaration', 'definition', 'readonly', 'static', 'deprecated', 'abstract', 'async',
     'documentation', 'modification', 'defaultLibrary'];
 const legend = new SemanticTokensLegend(tokenTypes, tokenModifiers);
-
-interface FragmentAssociation {
-    range: Range,
-    association: string
-}
-
-interface DocumentAssociationsResponse {
-    fragments: FragmentAssociation[]
-}
 
 function hashCode(str: string): number {
     let hash: number = 0;
@@ -37,13 +29,16 @@ class EccoHighlightProvider implements DocumentSemanticTokensProvider {
 
     async provideDocumentSemanticTokens(document: TextDocument, token: CancellationToken): Promise<SemanticTokens> {
         const tokensBuilder = new SemanticTokensBuilder(legend);
-        const params = {
+        const params: EccoDocumentAssociationsRequest = {
             documentUri: document.uri.toString(),
             documentText: document.getText(),
             collapse: true
         };
-        const response: DocumentAssociationsResponse = await this.languageClient.sendRequest('ecco/documentAssociations', params);
+        const response: EccoDocumentAssociationsResponse = await this.languageClient.sendRequest('ecco/documentAssociations', params);
         response.fragments.forEach(fragment => {
+            if (fragment.association === null) {
+                return;
+            }
             const hash = Math.abs(hashCode(fragment.association));
             const tokenType = tokenTypes[hash % tokenTypes.length];
             const tokenModifier = tokenModifiers[hash % tokenModifiers.length];

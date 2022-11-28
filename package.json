@@ -33,7 +33,17 @@
         "command": "eccoExtension.openAssociationsView",
         "title": "Render ECCO Document Associations"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "ECCO",
+      "properties": {
+        "ecco.ignoreColumnsForColoring": {
+          "type": "boolean",
+          "default": false,
+          "description": "Ignore column information when colouring documents."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

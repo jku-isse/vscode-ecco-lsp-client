@@ -1,10 +1,14 @@
 import path = require("path");
 import fs = require("fs");
-import { ExtensionContext } from "vscode";
+import { ExtensionContext, workspace } from "vscode";
 import logger from "./logger";
 import { Executable, LanguageClient, LanguageClientOptions, ServerOptions } from "vscode-languageclient/node";
 
 export async function newEccoLanguageClient(context: ExtensionContext): Promise<LanguageClient> {
+    const settings = {
+        ignoreColumnsForColoring: workspace.getConfiguration().get('ecco.ignoreColumnsForColoring')
+    };
+
     const logDirectory = context.logUri.fsPath;
     const serverLogFile = path.join(logDirectory, "ecco-lsp-server.log");
     try {
@@ -46,14 +50,17 @@ export async function newEccoLanguageClient(context: ExtensionContext): Promise<
             { scheme: 'file', language: 'java' },
             { scheme: 'file', language: 'xml' },
             { scheme: 'file', language: 'lilypond' }
-        ]		
+        ]
     };
 
-    return new LanguageClient(
+    const client = new LanguageClient(
         'eccoLspClient',
         'Client for ECCO language server',
         serverOptions,
         clientOptions,
         true
     );
+
+    await client.sendRequest('ecco/updateSettings', settings);
+    return client;
 }

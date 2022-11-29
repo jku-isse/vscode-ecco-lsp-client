@@ -1,4 +1,4 @@
-import { Range } from "vscode"
+import * as vscode from 'vscode';
 
 export interface EccoDocumentAssociationsRequest {
     documentUri: string,
@@ -6,12 +6,12 @@ export interface EccoDocumentAssociationsRequest {
     collapse: boolean
 }
 
-export interface EccoFragmentAssociation {
-    range: Range,
+export interface EccoDocumentFragmentAssociation {
+    range: vscode.Range,
     association: string | null,
     associationCondition: string | null
 }
 
 export interface EccoDocumentAssociationsResponse {
-    fragments: EccoFragmentAssociation[]
+    fragments: EccoDocumentFragmentAssociation[]
 }

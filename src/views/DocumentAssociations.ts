@@ -1,9 +1,10 @@
 import assert = require('assert');
 import { Color, ExtensionContext, Position, Range, TextDocument, TextLine, ViewColumn, WebviewPanel, window } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient/node';
-import { EccoDocumentAssociationsRequest, EccoDocumentAssociationsResponse, EccoFragmentAssociation } from './dto/Associations';
+import { EccoDocumentAssociationsRequest, EccoDocumentAssociationsResponse, EccoDocumentFragmentAssociation } from '../lsp/DocumentAssociations';
+import EccoLanguageClient from '../lsp/EccoLanguageClient';
 
-interface ExtendedDocumentFragmentAssociation extends EccoFragmentAssociation {
+interface ExtendedDocumentFragmentAssociation extends EccoDocumentFragmentAssociation {
     content: string
 };
 
@@ -27,12 +28,10 @@ function hashCode(str: string): number {
 }
 
 export default class EccoDocumentAssociationsView {
-    private context: ExtensionContext;
+    private languageClient: EccoLanguageClient;
     private view?: WebviewPanel;
-    private languageClient: LanguageClient;
 
-    constructor (context: ExtensionContext, languageClient: LanguageClient) {
-        this.context = context;
+    constructor (languageClient: EccoLanguageClient) {
         this.languageClient = languageClient;
     }
 
@@ -51,13 +50,8 @@ export default class EccoDocumentAssociationsView {
 
     private async updateWebviewContent (document: TextDocument) {
         assert(this.view);
-        const params: EccoDocumentAssociationsRequest = {
-            documentUri: document.uri.toString(),
-            documentText: document.getText(),
-            collapse: true
-        };
-
-        const response: EccoDocumentAssociationsResponse = await this.languageClient.sendRequest('ecco/documentAssociations', params);
+        
+        const response: EccoDocumentAssociationsResponse = await this.languageClient.getDocumentAssociations(document.uri.toString(), document.getText());
 
         const htmlHeader = `
             <!DOCTYPE html>
@@ -111,7 +105,7 @@ export default class EccoDocumentAssociationsView {
 
         let htmlContent = '';
         try {
-            const documentAssociations = response.fragments.map((fragment: EccoFragmentAssociation): ExtendedDocumentFragmentAssociation => {
+            const documentAssociations = response.fragments.map((fragment: EccoDocumentFragmentAssociation): ExtendedDocumentFragmentAssociation => {
                 if (fragment.range.start.line !== fragment.range.end.line) {
                     console.log(fragment.range);
                     throw new Error('Expected every fragment returned by ECCO LSP document association service to cover only a single line');

@@ -5,6 +5,7 @@ import { LanguageClient, Executable, ServerOptions, LanguageClientOptions } from
 import logger from '../logger';
 import { EccoDocumentAssociationsResponse } from "./DocumentAssociations";
 import { EccoRepositoryInfoResponse } from "./RepositoryInfo";
+import { EccoSettings } from "./Settings";
 
 export default class EccoLanguageClient {
     private logDirectory: string;
@@ -114,5 +115,13 @@ export default class EccoLanguageClient {
             documentText,
             collapse
         });
+    }
+
+    public async getSettings(): Promise<EccoSettings> {
+        return await this.getLanguageClient().sendRequest('ecco/getSettings', {});
+    }
+
+    public async updateSettings(settings: EccoSettings): Promise<EccoSettings> {
+        return await this.getLanguageClient().sendRequest('ecco/updateSettings', settings);
     }
 }

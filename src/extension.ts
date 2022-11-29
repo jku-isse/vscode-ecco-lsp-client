@@ -1,5 +1,5 @@
 import logger from './logger';
-import { ExtensionContext, window } from "vscode";
+import { ExtensionContext, window, workspace } from "vscode";
 import EccoLanguageClient from "./lsp/EccoLanguageClient";
 import AbstractCommand from "./commands/AbstractCommand";
 import EccoCheckoutOperation from "./commands/Checkout";
@@ -44,6 +44,10 @@ class EccoClientExtension {
         this.providers.forEach(provider =>
             this.context.subscriptions.push(provider.registerProvider()));
         this.statusBarItem.show();
+
+		await this.languageClient.updateSettings({
+			ignoreColumnsForColoring: workspace.getConfiguration().get('ecco.ignoreColumnsForColoring') || false
+		});
     }
 
     public async stop(): Promise<void> {

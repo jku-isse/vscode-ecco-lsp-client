@@ -3,6 +3,7 @@ import AbstractProvider from "./AbstractProvider";
 import * as vscode from 'vscode';
 import EccoLanguageClient from "../lsp/EccoLanguageClient";
 import logger from "../logger";
+import { showWorkspacePicker } from "../views/WorkspacePicker";
 
 export default class EccoRepositoryInfoProvider implements AbstractProvider, vscode.TextDocumentContentProvider {
     private languageClient: EccoLanguageClient;
@@ -18,9 +19,14 @@ export default class EccoRepositoryInfoProvider implements AbstractProvider, vsc
         return vscode.workspace.registerTextDocumentContentProvider("ecco-info", this);
     }
 
-    public async provideTextDocumentContent(_: vscode.Uri): Promise<string | null> {
+    public async provideTextDocumentContent(documentUri: vscode.Uri): Promise<string | null> {
         try {
-            const repoInfo = await this.languageClient.getRepositoryInfo();
+            const workspaceUri = await showWorkspacePicker('Select ECCO repository');
+            if (!workspaceUri) {
+                return null;
+            }
+
+            const repoInfo = await this.languageClient.getRepositoryInfo(workspaceUri.toString());
 
             return `Base directory: ${repoInfo.baseDir}\n` +
                    `Current configuration: ${repoInfo.configuration}\n` +
@@ -40,9 +46,9 @@ export default class EccoRepositoryInfoProvider implements AbstractProvider, vsc
                         .join('\n');
             // return JSON.stringify(response, null, 2);
         } catch (ex) {
-            logger.log('error', `Failed to perform ECCO commit: ${ex}`);
+            logger.log('error', `Failed to retrieve ECCO info: ${ex}`);
     
-            await vscode.window.showErrorMessage(`Failed to perform ECCO commit: ${ex}`);
+            await vscode.window.showErrorMessage(`Failed to retrieve ECCO info: ${ex}`);
             return null;
         }
     }

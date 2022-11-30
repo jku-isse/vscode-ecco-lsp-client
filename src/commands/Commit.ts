@@ -2,6 +2,7 @@ import EccoLanguageClient from "../lsp/EccoLanguageClient";
 import AbstractCommand from "./AbstractCommand";
 import * as vscode from 'vscode';
 import logger from '../logger';
+import { showWorkspacePicker } from "../views/WorkspacePicker";
 
 export default class EccoCommitOperation extends AbstractCommand {
     private languageClient: EccoLanguageClient;
@@ -12,6 +13,11 @@ export default class EccoCommitOperation extends AbstractCommand {
     }
 
     protected async runCommand(): Promise<void> {
+        const workspaceUri = await showWorkspacePicker('Select ECCO repository');
+        if (!workspaceUri) {
+            return;
+        }
+
         const message: string | undefined = await vscode.window.showInputBox({
             title: 'ECCO commit message',
             placeHolder: 'Describe your commit'
@@ -37,7 +43,7 @@ export default class EccoCommitOperation extends AbstractCommand {
                 location: vscode.ProgressLocation.Notification,
                 title: "Please wait until ECCO commit operation completes"
             }, async () => {
-                await this.languageClient.commit(configuration, message);
+                await this.languageClient.commit(workspaceUri.toString(), configuration, message);
             });
     
             vscode.commands.executeCommand('workbench.action.reloadWindow');

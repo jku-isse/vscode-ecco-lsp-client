@@ -2,6 +2,7 @@ import AbstractCommand from "./AbstractCommand";
 import * as vscode from 'vscode';
 import EccoLanguageClient from "../lsp/EccoLanguageClient";
 import EccoDocumentFeaturesView from "../views/DocumentFeatures";
+import { showWorkspacePicker } from "../views/WorkspacePicker";
 
 export default class EccoRenderDocumentFeatures extends AbstractCommand {
     private context: vscode.ExtensionContext;
@@ -21,7 +22,7 @@ export default class EccoRenderDocumentFeatures extends AbstractCommand {
         }
         const document = vscode.window.activeTextEditor.document;
 
-        const repoInfo = await this.languageClient.getRepositoryInfo();
+        const repoInfo = await this.languageClient.getRepositoryInfo(document.uri.toString());
 
         const featuresPick = vscode.window.createQuickPick();
         featuresPick.items = repoInfo.features
@@ -38,6 +39,11 @@ export default class EccoRenderDocumentFeatures extends AbstractCommand {
 
             const view = new EccoDocumentFeaturesView(this.languageClient);
             view.update(document, features);
+        }));
+
+        disposables.push(featuresPick.onDidHide(() => {
+            disposables.forEach(disposable => disposable.dispose());
+            featuresPick.dispose();
         }));
 
         featuresPick.show();

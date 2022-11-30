@@ -93,21 +93,25 @@ export default class EccoLanguageClient {
         }
     }
 
-    public async commit(configuration: string, message: string): Promise<void> {
+    public async commit(workspaceUri: string, configuration: string, message: string): Promise<void> {
         await this.getLanguageClient().sendRequest("ecco/commit", {
+            workspaceUri,
             configuration,
             message
         });
     }
 
-    public async checkout(configuration: string) {
+    public async checkout(workspaceUri: string, configuration: string) {
         await this.getLanguageClient().sendRequest("ecco/checkout", {
+            workspaceUri,
             configuration
         });
     }
 
-    public async getRepositoryInfo(): Promise<EccoRepositoryInfoResponse> {
-        return await this.getLanguageClient().sendRequest('ecco/info', {});
+    public async getRepositoryInfo(workspaceUri: string): Promise<EccoRepositoryInfoResponse> {
+        return await this.getLanguageClient().sendRequest('ecco/info', {
+            workspaceUri
+        });
     }
 
     public async getDocumentAssociations(documentUri: string): Promise<EccoDocumentAssociationsResponse> {

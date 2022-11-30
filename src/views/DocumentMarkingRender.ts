@@ -38,6 +38,7 @@ export async function renderDocumentMarkingsAsHtml<M> (document: TextDocument,
                         flex-direction: column,
                         flex-wrap: nowrap;
                         font-family: var(--vscode-editor-font-family);
+                        min-width: fit-content;
                     }
 
                     .document-line-number {

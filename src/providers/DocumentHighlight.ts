@@ -35,13 +35,13 @@ export default class EccoDocumentHighlightProvider implements AbstractProvider, 
 
     public async provideDocumentSemanticTokens(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.SemanticTokens> {
         const tokensBuilder = new vscode.SemanticTokensBuilder(legend);
-        const response = await this.languageClient.getDocumentAssociations(document.uri.toString(), document.getText());
+        const response = await this.languageClient.getDocumentAssociations(document.uri.toString());
         response.fragments.forEach(fragment => {
             if (fragment.association === null) {
                 return;
             }
             
-            const hash = Math.abs(hashCode(fragment.association));
+            const hash = Math.abs(hashCode(fragment.association.id));
             const tokenType = tokenTypes[hash % tokenTypes.length];
             const tokenModifier = tokenModifiers[hash % tokenModifiers.length];
             try {

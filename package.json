@@ -32,6 +32,10 @@
       {
         "command": "eccoExtension.openAssociationsView",
         "title": "Render ECCO Document Associations"
+      },
+      {
+        "command": "eccoExtension.openFeaturesView",
+        "title": "Render ECCO Document Features"
       }
     ],
     "configuration": {

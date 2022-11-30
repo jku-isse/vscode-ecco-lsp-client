@@ -23,6 +23,9 @@ export interface FragmentMarkingRendererData {
 export async function renderDocumentMarkingsAsHtml<M> (document: TextDocument,
                                                        documentMarkings: TextDocumentMarking<M>,
                                                        rendererData: Map<M, FragmentMarkingRendererData>): Promise<string> {
+    const documentNumOfLines = document.lineCount;
+    const lineNumberWidth = Math.ceil(Math.log(documentNumOfLines) / Math.log(10));
+
     const htmlHeader = `
         <!DOCTYPE html>
         <html lang="en">
@@ -33,11 +36,26 @@ export async function renderDocumentMarkingsAsHtml<M> (document: TextDocument,
                     .document-contents {
                         display: flex,
                         flex-direction: column,
-                        flex-wrap: nowrap
-                        font-family: monospace;
+                        flex-wrap: nowrap;
+                        font-family: var(--vscode-editor-font-family);
+                    }
+
+                    .document-line-number {
+                        display: inline-block;
+                        flex-grow: 0;
+                        min-width: ${lineNumberWidth}ch;
+                        width: ${lineNumberWidth}ch;
+                        text-align: right;
+                        font-weight: bold;
+                        border-right-style: solid;
+                        border-right-width: 1px;
+                        padding-right: 5px;
+                        margin-right: 3px;
+                        user-select: none;
                     }
 
                     .document-line {
+                        flex-grow: 1;
                         display: flex,
                         flex-direction: row,
                         flex-wrap: nowrap
@@ -121,7 +139,11 @@ export async function renderDocumentMarkingsAsHtml<M> (document: TextDocument,
                             return `<div class="document-fragment" style="${cssProps}">${fragment.content}</div>`;
                         })
                         .join(''))
-                .map(line => `<div class="document-line">${line}</div>`)
+                .map((line, lineNumber) => `
+                    <div class="document-line">
+                        <div class="document-line-number">${lineNumber + 1}</div>
+                        ${line}
+                    </div>`)
                 .join('') +
                 '</div>';
         

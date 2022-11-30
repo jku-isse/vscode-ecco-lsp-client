@@ -9,6 +9,7 @@ import EccoRenderDocumentAssociations from "./commands/RenderDocumentAssociation
 import AbstractProvider from "./providers/AbstractProvider";
 import EccoRepositoryInfoProvider from "./providers/RepositoryInfo";
 import EccoStatusBarItem from './views/StatusBar';
+import EccoRenderDocumentFeatures from './commands/RenderDocumentFeatures';
 
 class EccoClientExtension {
 
@@ -26,7 +27,8 @@ class EccoClientExtension {
             new EccoCheckoutOperation(this.languageClient),
             new EccoCommitOperation(this.languageClient),
             new EccoDisplayRepositoryInfo(),
-            new EccoRenderDocumentAssociations(this.context, this.languageClient)
+            new EccoRenderDocumentAssociations(this.context, this.languageClient),
+            new EccoRenderDocumentFeatures(this.context, this.languageClient)
         ];
 
         this.providers = [

@@ -13,7 +13,7 @@ function hashCode(str: string): number {
     return hash;
 }
 
-export default class EccoDocumentAssociationsView {
+export default class EccoDocumentFeaturesView {
     private languageClient: EccoLanguageClient;
     private view?: vscode.WebviewPanel;
 
@@ -21,42 +21,44 @@ export default class EccoDocumentAssociationsView {
         this.languageClient = languageClient;
     }
 
-    async update (document: vscode.TextDocument) {
+    async update (document: vscode.TextDocument, features: string[] | null) {
         if (!this.view) {
             this.view = vscode.window.createWebviewPanel(
-                'eccoDocumentAssociations',
-                `ECCO Associations: ${document.uri.toString()}`,
+                'eccoDocumentFeatures',
+                `ECCO Features: ${document.uri.toString()}`,
                 vscode.ViewColumn.Two,
                 {}
             );
         }
 
-        const [markings, rendererData] = await this.loadMarkings(document);
+        const [markings, rendererData] = await this.loadMarkings(document, features);
 
         this.view.webview.html = await renderDocumentMarkingsAsHtml(document, markings, rendererData);
     }
 
-    protected async loadMarkings(document: vscode.TextDocument): Promise<[TextDocumentMarking<string>, Map<string, FragmentMarkingRendererData>]> {
-        const response = await this.languageClient.getDocumentAssociations(document.uri.toString());
+    protected async loadMarkings(document: vscode.TextDocument, features: string[] | null): Promise<[TextDocumentMarking<string>, Map<string, FragmentMarkingRendererData>]> {
+        const response = await this.languageClient.getDocumentFeatures(document.uri.toString(), features);
         const markings = {
             fragments: response.fragments.map(fragment => ({
                 range: fragment.range,
-                marking: fragment.association.id
+                marking: fragment.features.join(', ')
             }))
         };
 
         const rendererData = new Map();
         response.fragments.forEach(fragment => {
-            if (fragment.association !== null && !rendererData.has(fragment.association)) {
-                const associationHash = hashCode(fragment.association.id);
+            const key = fragment.features.join(', ');
+            if (!rendererData.has(key)) {
+                const associationHash = hashCode(key);
                 const redColor = (associationHash >> 8) & 0xff;
                 const greenColor = (associationHash >> 16) & 0xff;
                 const blueColor = (associationHash >> 24) & 0xff;
                 const alpha = 0.7;
-                const color = new vscode.Color(redColor, greenColor, blueColor, alpha);
+                const dark = 0.8;
+                const color = new vscode.Color(redColor * dark, greenColor * dark, blueColor * dark, alpha);
 
-                rendererData.set(fragment.association.id, {
-                    description: fragment.association.condition,
+                rendererData.set(key, {
+                    description: key,
                     color
                 });
             }

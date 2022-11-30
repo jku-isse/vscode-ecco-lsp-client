@@ -4,6 +4,7 @@ import { ExtensionContext } from "vscode";
 import { LanguageClient, Executable, ServerOptions, LanguageClientOptions } from "vscode-languageclient/node";
 import logger from '../logger';
 import { EccoDocumentAssociationsResponse } from "./DocumentAssociations";
+import { EccoDocumentFeaturesResponse } from "./DocumentFeatures";
 import { EccoRepositoryInfoResponse } from "./RepositoryInfo";
 import { EccoSettings } from "./Settings";
 
@@ -109,11 +110,16 @@ export default class EccoLanguageClient {
         return await this.getLanguageClient().sendRequest('ecco/info', {});
     }
 
-    public async getDocumentAssociations(documentUri: string, documentText: string, collapse: boolean = true): Promise<EccoDocumentAssociationsResponse> {
+    public async getDocumentAssociations(documentUri: string): Promise<EccoDocumentAssociationsResponse> {
         return await this.getLanguageClient().sendRequest('ecco/documentAssociations', {
+            documentUri
+        });
+    }
+
+    public async getDocumentFeatures(documentUri: string, requestedFeatures: string[] | null): Promise<EccoDocumentFeaturesResponse> {
+        return await this.getLanguageClient().sendRequest('ecco/documentFeatures', {
             documentUri,
-            documentText,
-            collapse
+            requestedFeatures
         });
     }
 

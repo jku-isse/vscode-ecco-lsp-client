@@ -21,12 +21,9 @@ export default class EccoRepositoryInfoProvider implements AbstractProvider, vsc
 
     public async provideTextDocumentContent(documentUri: vscode.Uri): Promise<string | null> {
         try {
-            const workspaceUri = await showWorkspacePicker('Select ECCO repository');
-            if (!workspaceUri) {
-                return null;
-            }
+            const workspaceUri = decodeURIComponent(documentUri.path);
 
-            const repoInfo = await this.languageClient.getRepositoryInfo(workspaceUri.toString());
+            const repoInfo = await this.languageClient.getRepositoryInfo(workspaceUri);
 
             return `Base directory: ${repoInfo.baseDir}\n` +
                    `Current configuration: ${repoInfo.configuration}\n` +
